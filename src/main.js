@@ -7,7 +7,7 @@
 const omdbUrl = 'http://www.omdbapi.com';
 const omdbType = 'movie';
 const omdbResultsPerPage = 10;
-
+const omdbMissingPoster = 'N/A';
 
 //#region Event handlers 
 
@@ -31,8 +31,12 @@ async function onSearchButtonClick() {
 
 }
 
-function onBackButtonClick() {
+async function onBackButtonClick() {
 
+}
+
+async function onMovieClick(imdbID) {
+    console.log(`Clicked movie ${imdbID}`);
 }
 
 //#endregion 
@@ -44,6 +48,26 @@ async function searchOMDB(searchTerm) {
     let currentPage = 1;
     let totalPages = 1;
     let result = [];
+
+    while (currentPage <= totalPages) {       
+
+        let url = `${omdbUrl}?apikey=${omdbKey}&type=${omdbType}&s=${encodeURIComponent(searchTerm)}&page=${currentPage}`;
+
+        // console.log(`Getting page ${currentPage} of ${totalPages} from ${url}`);
+
+        let response = await fetch(url);
+        let searchResults = await response.json();
+
+        if (!searchResults.Response) {
+            break;
+        }
+
+        result = result.concat(searchResults.Search);
+
+        totalPages = Math.ceil(searchResults.totalResults / omdbResultsPerPage);
+        currentPage++;
+
+    }
 
     return result;
 
@@ -78,6 +102,29 @@ function displaySearchResults(searchTerm, results) {
         showStatusMessage(`No results found for "${searchTerm}"`);
         return;
     }
+
+    let resultGrid = document.getElementById('resultGrid');
+    let resultTemplate = document.getElementById('resultTemplate');
+
+    results.forEach(movie => {
+
+        let resultRow = resultTemplate.content.cloneNode(true);
+        if (movie.Poster !== omdbMissingPoster) {
+            let thumbnail = resultRow.querySelector('.thumb');
+            thumbnail.src = movie.Poster;
+        }
+        let releaseYear =  resultRow.querySelector('.releaseYear');
+        releaseYear.innerHTML = movie.Year;
+        let titleLink =  resultRow.querySelector('.title');
+        titleLink.text = movie.Title;
+        titleLink.addEventListener('click', () => { onMovieClick(movie.imdbID); });
+        resultGrid.appendChild(resultRow);
+        
+    });
+
+    showStatusMessage(`${results.length} results found for "${searchTerm}"`);
+    resultGrid.classList.remove('hidden');
+
 
 }
 
