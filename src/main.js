@@ -43,10 +43,19 @@ async function onBackButtonClick() {
 
 async function onMovieClick(imdbID) {
 
+    hideMovieDetails();
     hideResultGrid();
-    hideStatusMessage();
-    showMovieDetails();
+    showStatusMessage('Please wait...');
 
+    try {
+        let movie = await getMovieDetailsFromOMDB(imdbID);
+        displayMovieDetails(movie);
+        hideStatusMessage();
+    } catch (error) {
+        console.error(error);
+        showStatusMessage('Something went wrong, please try again.');
+    }   
+    
 }
 
 //#endregion 
@@ -59,7 +68,7 @@ async function searchOMDB(searchTerm) {
     let totalPages = 1;
     let result = [];
 
-    while (currentPage <= totalPages) {       
+    while (currentPage <= totalPages) {
 
         let url = `${omdbUrl}?apikey=${omdbKey}&type=${omdbType}&s=${encodeURIComponent(searchTerm)}&page=${currentPage}`;
 
@@ -83,14 +92,100 @@ async function searchOMDB(searchTerm) {
 
 }
 
+async function getMovieDetailsFromOMDB(imdbID) {
+
+    let url = `${omdbUrl}?apikey=${omdbKey}&i=${encodeURIComponent(imdbID)}`;
+
+    let response = await fetch(url);
+    return await response.json();
+
+}
+
 function sortResultsByDateThenName(searchResults) {
     //Sorts first in descending order by release year, then ascending order by title
-   return searchResults.sort((a, b) => (b.Year > a.Year) ? 1 : (a.Year === b.Year) ? ((a.Title > b.Title) ? 1 : -1) : -1 );
+    return searchResults.sort((a, b) => (b.Year > a.Year) ? 1 : (a.Year === b.Year) ? ((a.Title > b.Title) ? 1 : -1) : -1);
 }
 
 //#endregion
 
-//#region UI update methods
+//#region Movie display methods 
+
+function displaySearchResults(searchTerm, results) {
+
+    let resultGrid = document.getElementById('resultGrid');
+    let resultTemplate = document.getElementById('resultTemplate');
+
+    resultGrid.querySelectorAll('.row').forEach(row => row.remove());
+
+    if (results.length === 0) {
+        showStatusMessage(`No results found for "${searchTerm}"`);
+        return;
+    }
+
+    results.forEach(movie => {
+
+        let resultRow = resultTemplate.content.cloneNode(true);
+        if (movie.Poster !== omdbMissingPoster) {
+            let thumbnail = resultRow.querySelector('.thumb');
+            thumbnail.src = movie.Poster;
+        }
+        let releaseYear = resultRow.querySelector('.releaseYear');
+        releaseYear.innerHTML = movie.Year;
+        let titleLink = resultRow.querySelector('.title');
+        titleLink.text = movie.Title;
+        titleLink.addEventListener('click', () => { onMovieClick(movie.imdbID); });
+        resultGrid.appendChild(resultRow);
+
+    });
+
+    showStatusMessage(`${results.length} results found for "${searchTerm}"`);
+    showResultGrid();
+
+}
+
+function displayMovieDetails(movie) {
+
+    let detailGrid = document.getElementById('detailGrid');
+    let detailTemplate = document.getElementById('detailTemplate');
+
+    detailGrid.querySelectorAll('.detail').forEach(row => row.remove());
+
+    for (const property in movie) {
+        // console.log(`${property}: ${movie[property]}`);
+
+        let detailRow = detailTemplate.content.cloneNode(true);
+        let propertyLabel = detailRow.querySelector('.detailLabel');
+        let propertyData = detailRow.querySelector('.detailData');
+
+        // Handle a few special cases: 
+        // - the "Response" property, which is a property of OMDB and not of the movie itself 
+        // - The "Poster" property, which should display an image and may be either the image src or "N/A"
+        // - the "Ratings" property, which is an array of ratings (source and rating)
+        if (property === 'Response') {
+            continue;
+        } else if (property === 'Poster') {
+            propertyLabel.innerHTML = 'Poster';
+            if (movie.Poster !== omdbMissingPoster) {
+                let poster = document.createElement('img');
+                poster.classList.add('thumb');
+                poster.src = movie[property];
+                propertyData.appendChild(poster);
+            }
+        } else {
+            propertyLabel.innerHTML = property;
+            propertyData.innerHTML = movie[property];
+        }
+        detailGrid.appendChild(detailRow);
+
+      }
+
+      showMovieDetails();
+
+}
+
+//#endregion
+
+//#region UI helper methods
 
 function showStatusMessage(message) {
     const searchStatus = document.getElementById('searchStatus');
@@ -98,8 +193,6 @@ function showStatusMessage(message) {
         searchStatus.innerHTML = message;
     }
     searchStatus.classList.remove('hidden');
-    
-    
 }
 
 function hideStatusMessage() {
@@ -130,41 +223,6 @@ function showMovieDetails() {
 function hideMovieDetails() {
     let details = document.getElementById('details');
     details.classList.add('hidden');
-}
-
-function displaySearchResults(searchTerm, results) {
-
-    let resultGrid = document.getElementById('resultGrid');
-    let resultTemplate = document.getElementById('resultTemplate');
-
-    resultGrid.querySelectorAll('.row').forEach(row => row.remove());
-
-    if (results.length === 0) {
-        showStatusMessage(`No results found for "${searchTerm}"`);
-        return;
-    }
-
-    
-
-    results.forEach(movie => {
-
-        let resultRow = resultTemplate.content.cloneNode(true);
-        if (movie.Poster !== omdbMissingPoster) {
-            let thumbnail = resultRow.querySelector('.thumb');
-            thumbnail.src = movie.Poster;
-        }
-        let releaseYear =  resultRow.querySelector('.releaseYear');
-        releaseYear.innerHTML = movie.Year;
-        let titleLink =  resultRow.querySelector('.title');
-        titleLink.text = movie.Title;
-        titleLink.addEventListener('click', () => { onMovieClick(movie.imdbID); });
-        resultGrid.appendChild(resultRow);
-        
-    });
-
-    showStatusMessage(`${results.length} results found for "${searchTerm}"`);
-    showResultGrid();
-
 }
 
 //#endregion

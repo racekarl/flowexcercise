@@ -48,9 +48,7 @@ html {
     line-height: 5rem;
 }
 
-.tot
-
-#detailGrid {
+.detail {
     display: grid;
     grid-template-columns:  1fr 1fr;
     column-gap: 1rem;
