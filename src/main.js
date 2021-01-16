@@ -13,6 +13,8 @@ const omdbMissingPoster = 'N/A';
 
 async function onSearchButtonClick() {
 
+    hideMovieDetails();
+    hideResultGrid();
     showStatusMessage('Please wait...');
     toggleSearchButton();
     const searchBox = document.getElementById('searchTerm');
@@ -33,10 +35,18 @@ async function onSearchButtonClick() {
 
 async function onBackButtonClick() {
 
+    hideMovieDetails();
+    showStatusMessage();
+    showResultGrid();
+
 }
 
 async function onMovieClick(imdbID) {
-    console.log(`Clicked movie ${imdbID}`);
+
+    hideResultGrid();
+    hideStatusMessage();
+    showMovieDetails();
+
 }
 
 //#endregion 
@@ -83,29 +93,58 @@ function sortResultsByDateThenName(searchResults) {
 //#region UI update methods
 
 function showStatusMessage(message) {
-
     const searchStatus = document.getElementById('searchStatus');
+    if (message && message.length > 0) {
+        searchStatus.innerHTML = message;
+    }
     searchStatus.classList.remove('hidden');
-    searchStatus.innerHTML = message;
+    
+    
+}
 
+function hideStatusMessage() {
+    const searchStatus = document.getElementById('searchStatus');
+    searchStatus.classList.add('hidden');
 }
 
 function toggleSearchButton() {
-
     const searchButton = document.getElementById('searchButton');
     searchButton.disabled = !searchButton.disabled;
+}
 
+function showResultGrid() {
+    let resultGrid = document.getElementById('resultGrid');
+    resultGrid.classList.remove('hidden');
+}
+
+function hideResultGrid() {
+    let resultGrid = document.getElementById('resultGrid');
+    resultGrid.classList.add('hidden');
+}
+
+function showMovieDetails() {
+    let details = document.getElementById('details');
+    details.classList.remove('hidden');
+}
+
+function hideMovieDetails() {
+    let details = document.getElementById('details');
+    details.classList.add('hidden');
 }
 
 function displaySearchResults(searchTerm, results) {
+
+    let resultGrid = document.getElementById('resultGrid');
+    let resultTemplate = document.getElementById('resultTemplate');
+
+    resultGrid.querySelectorAll('.row').forEach(row => row.remove());
 
     if (results.length === 0) {
         showStatusMessage(`No results found for "${searchTerm}"`);
         return;
     }
 
-    let resultGrid = document.getElementById('resultGrid');
-    let resultTemplate = document.getElementById('resultTemplate');
+    
 
     results.forEach(movie => {
 
@@ -124,8 +163,7 @@ function displaySearchResults(searchTerm, results) {
     });
 
     showStatusMessage(`${results.length} results found for "${searchTerm}"`);
-    resultGrid.classList.remove('hidden');
-
+    showResultGrid();
 
 }
 
