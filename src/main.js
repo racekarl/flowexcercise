@@ -71,12 +71,11 @@ async function searchOMDB(searchTerm) {
 
         let url = `${omdbUrl}?apikey=${omdbKey}&type=${omdbType}&s=${encodeURIComponent(searchTerm)}&page=${currentPage}`;
 
-        // console.log(`Getting page ${currentPage} of ${totalPages} from ${url}`);
-
         let response = await fetch(url);
         let searchResults = await response.json();
 
-        if (!searchResults.Response) {
+        // OMDB API returns a string indicating if the result found any movies
+        if (!searchResults.Response || searchResults.Response === 'False') {
             break;
         }
 
