@@ -171,10 +171,19 @@ function displayMovieDetails(movie) {
                 poster.src = movie[property];
                 propertyData.appendChild(poster);
             }
+        } else if (property === 'Ratings') {
+            propertyLabel.innerHTML = property;
+            let ratingText = '';
+            movie.Ratings.forEach(rating => {
+                ratingText += `${rating.Source} : ${rating.Value} <br />`;
+            });
+            propertyData.innerHTML = ratingText;
+        
         } else {
             propertyLabel.innerHTML = property;
             propertyData.innerHTML = movie[property];
         }
+
         detailGrid.appendChild(detailRow);
 
       }
