@@ -166,19 +166,22 @@ function displayMovieDetails(movie) {
         } else if (property === 'Poster') {
             propertyLabel.innerHTML = 'Poster';
             if (movie.Poster !== omdbMissingPoster) {
-                let poster = document.createElement('img');
-                poster.classList.add('thumb');
+                let posterTemplate = document.getElementById('detailPoster');
+                let poster = posterTemplate.content.firstElementChild.cloneNode(true);
                 poster.src = movie[property];
                 propertyData.appendChild(poster);
             }
         } else if (property === 'Ratings') {
             propertyLabel.innerHTML = property;
-            let ratingText = '';
+            let ratingTemplate = document.getElementById('detailRatings')
             movie.Ratings.forEach(rating => {
-                ratingText += `${rating.Source} : ${rating.Value} <br />`;
-            });
-            propertyData.innerHTML = ratingText;
-        
+                let ratingRow = ratingTemplate.content.cloneNode(true);
+                let ratingSource = ratingRow.querySelector('.ratingSource');
+                ratingSource.innerHTML = rating.Source;
+                let ratingValue = ratingRow.querySelector('.ratingValue');
+                ratingValue.innerHTML = rating.Value;
+                propertyData.appendChild(ratingRow);
+            });        
         } else {
             propertyLabel.innerHTML = property;
             propertyData.innerHTML = movie[property];
