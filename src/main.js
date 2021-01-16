@@ -45,7 +45,6 @@ async function onMovieClick(imdbID) {
 
     hideMovieDetails();
     hideResultGrid();
-    showStatusMessage('Please wait...');
 
     try {
         let movie = await getMovieDetailsFromOMDB(imdbID);
