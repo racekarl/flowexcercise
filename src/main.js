@@ -20,7 +20,7 @@ async function onSearchButtonClick() {
 
     try {
         let searchResults = await searchOMDB(searchTerm);
-        let sortedResults = await sortResultsByDateThenName(searchResults);
+        let sortedResults = sortResultsByDateThenName(searchResults);
         displaySearchResults(searchTerm, sortedResults);
     } catch (error) {
         console.error(error);
@@ -73,8 +73,9 @@ async function searchOMDB(searchTerm) {
 
 }
 
-async function sortResultsByDateThenName(searchResults) {
-    return searchResults;
+function sortResultsByDateThenName(searchResults) {
+    //Sorts first in descending order by release year, then ascending order by title
+   return searchResults.sort((a, b) => (b.Year > a.Year) ? 1 : (a.Year === b.Year) ? ((a.Title > b.Title) ? 1 : -1) : -1 );
 }
 
 //#endregion
